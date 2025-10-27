@@ -524,3 +524,5 @@ def main_triangulo(page: ft.Page) -> ft.View:
         [stack],
         padding=0,
     )
+    
+    ft.app(main_triangulo)
