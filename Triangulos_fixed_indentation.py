@@ -702,5 +702,8 @@ def main_triangulo(page: ft.Page) -> ft.View:
 def main(page: ft.Page):
     view = main_triangulo(page)
     page.add(*view.controls)
+    
 
-ft.app(main)
+if __name__ == "__main__":
+    import flet as ft
+    ft.app(target=main)
