@@ -105,71 +105,68 @@ def main_triangulo(page: ft.Page) -> ft.View:
             "C": parse(angulo_C),
         }
 
-    # Counters
-    lados_known = sum(1 for k in ("a","b","c") if ctx[k] > 0)
-    ang_known = sum(1 for k in ("A","B","C") if ctx[k] > 0)
-    
-            # basic validation
-    if lados_known + ang_known < 3:
-                show_snack("Ingresar al menos 3 datos (combinación válida: SSS, SAS, ASA, AAS, SSA).")
+        # Counters
+        lados_known = sum(1 for k in ("a","b","c") if ctx[k] > 0)
+        ang_known = sum(1 for k in ("A","B","C") if ctx[k] > 0)
+
+        # basic validation
+        if lados_known + ang_known < 3:
+            show_snack("Ingresar al menos 3 datos (combinación válida: SSS, SAS, ASA, AAS, SSA).")
             return
-    
-            # --- Helper solvers ---
-    def law_of_cos_for_angle(opposite, side1, side2):
-                # opposite is side opposite target angle (a for A), returns angle in degrees
-                denom = 2 * side1 * side2
-                if denom == 0:
-                    return 0.0
-                val = (side1*side1 + side2*side2 - opposite*opposite) / denom
-                val = clamp(val)
-                return Math.degrees(Math.acos(val))
-    
-    def law_of_cos_for_side(side1, side2, included_angle_deg):
-                return Math.sqrt(side1*side1 + side2*side2 - 2*side1*side2*Math.cos(Math.radians(included_angle_deg)))
-    
-    def law_of_sines_find_angle(known_side, known_angle_deg, target_side):
-                # returns angle in degrees using arcsin; handles domain by clamp
-                denom = known_side
-                if denom == 0:
-                    return 0.0
-                ratio = (target_side * Math.sin(Math.radians(known_angle_deg))) / denom
-                ratio = clamp(ratio)
-                try:
-                    ang = Math.degrees(Math.asin(ratio))
-                    return ang
-                except Exception:
-                    return 0.0
-    
-            # Attempt to solve progressively using standard cases
-    changed = True
-    iter_count = 0
-    ambiguous_alert = False
-    while changed and iter_count < 15:
-                changed = False
-                iter_count += 1
-    
-                # If three sides known -> compute all angles (SSS)
-                if sum(1 for k in ("a","b","c") if ctx[k] > 0) == 3:
-                    if ctx["A"] == 0:
-                        ctx["A"] = law_of_cos_for_angle(ctx["a"], ctx["b"], ctx["c"])
-                        changed = True
-                    if ctx["B"] == 0:
-                        ctx["B"] = law_of_cos_for_angle(ctx["b"], ctx["a"], ctx["c"])
-                        changed = True
-                    if ctx["C"] == 0:
-                        ctx["C"] = 180.0 - ctx["A"] - ctx["B"]
-                        changed = True
-    
-                # SAS: two sides and included angle -> compute opposite side
-                # check A included between b and c -> a unknown
-                if ctx["A"] > 0 and ctx["b"] > 0 and ctx["c"] > 0 and ctx["a"] == 0:
-                    ctx["a"] = law_of_cos_for_side(ctx["b"], ctx["c"], ctx["A"]); changed = True
-                if ctx["B"] > 0 and ctx["a"] > 0 and ctx["c"] > 0 and ctx["b"] == 0:
-                    ctx["b"] = law_of_cos_for_side(ctx["a"], ctx["c"], ctx["B"]); changed = True
-                if ctx["C"] > 0 and ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] == 0:
-                    ctx["c"] = law_of_cos_for_side(ctx["a"], ctx["b"], ctx["C"]); changed = True
-    
-                # ASA/AAS: two angles known -> third angle and law of sines for sides
+
+        # --- Helper solvers ---
+        def law_of_cos_for_angle(opposite, side1, side2):
+            denom = 2 * side1 * side2
+            if denom == 0:
+                return 0.0
+            val = (side1*side1 + side2*side2 - opposite*opposite) / denom
+            val = clamp(val)
+            return math.degrees(math.acos(val))
+
+        def law_of_cos_for_side(side1, side2, included_angle_deg):
+            return math.sqrt(side1*side1 + side2*side2 - 2*side1*side2*math.cos(math.radians(included_angle_deg)))
+
+        def law_of_sines_find_angle(known_side, known_angle_deg, target_side):
+            denom = known_side
+            if denom == 0:
+                return 0.0
+            ratio = (target_side * math.sin(math.radians(known_angle_deg))) / denom
+            ratio = clamp(ratio)
+            try:
+                ang = math.degrees(math.asin(ratio))
+                return ang
+            except Exception:
+                return 0.0
+
+        # Attempt to solve progressively using standard cases
+        changed = True
+        iter_count = 0
+        ambiguous_alert = False
+        while changed and iter_count < 15:
+            changed = False
+            iter_count += 1
+
+            # If three sides known -> compute all angles (SSS)
+            if sum(1 for k in ("a","b","c") if ctx[k] > 0) == 3:
+                if ctx["A"] == 0:
+                    ctx["A"] = law_of_cos_for_angle(ctx["a"], ctx["b"], ctx["c"])
+                    changed = True
+                if ctx["B"] == 0:
+                    ctx["B"] = law_of_cos_for_angle(ctx["b"], ctx["a"], ctx["c"])
+                    changed = True
+                if ctx["C"] == 0:
+                    ctx["C"] = 180.0 - ctx["A"] - ctx["B"]
+                    changed = True
+
+            # SAS: two sides and included angle -> compute opposite side
+            if ctx["A"] > 0 and ctx["b"] > 0 and ctx["c"] > 0 and ctx["a"] == 0:
+                ctx["a"] = law_of_cos_for_side(ctx["b"], ctx["c"], ctx["A"]); changed = True
+            if ctx["B"] > 0 and ctx["a"] > 0 and ctx["c"] > 0 and ctx["b"] == 0:
+                ctx["b"] = law_of_cos_for_side(ctx["a"], ctx["c"], ctx["B"]); changed = True
+            if ctx["C"] > 0 and ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] == 0:
+                ctx["c"] = law_of_cos_for_side(ctx["a"], ctx["b"], ctx["C"]); changed = True
+
+            # ASA/AAS: two angles known -> third angle and law of sines for sides
                 if sum(1 for k in ("A","B","C") if ctx[k] > 0) >= 2:
                     if ctx["A"] == 0:
                         ctx["A"] = 180.0 - (ctx.get("B",0)+ctx.get("C",0)); changed = True
@@ -180,19 +177,19 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     # now use law of sines to get sides if at least one side known
                     if ctx["a"] > 0 and ctx["A"] > 0:
                         if ctx["b"] == 0 and ctx["B"] > 0:
-                            ctx["b"] = (ctx["a"] * Math.sin(Math.radians(ctx["B"]))) / Math.sin(Math.radians(ctx["A"])); changed = True
+                            ctx["b"] = (ctx["a"] * math.sin(math.radians(ctx["B"]))) / math.sin(math.radians(ctx["A"])); changed = True
                         if ctx["c"] == 0 and ctx["C"] > 0:
-                            ctx["c"] = (ctx["a"] * Math.sin(Math.radians(ctx["C"]))) / Math.sin(Math.radians(ctx["A"])); changed = True
+                            ctx["c"] = (ctx["a"] * math.sin(math.radians(ctx["C"]))) / math.sin(math.radians(ctx["A"])); changed = True
                     if ctx["b"] > 0 and ctx["B"] > 0:
                         if ctx["a"] == 0 and ctx["A"] > 0:
-                            ctx["a"] = (ctx["b"] * Math.sin(Math.radians(ctx["A"]))) / Math.sin(Math.radians(ctx["B"])); changed = True
+                            ctx["a"] = (ctx["b"] * math.sin(math.radians(ctx["A"]))) / math.sin(math.radians(ctx["B"])); changed = True
                         if ctx["c"] == 0 and ctx["C"] > 0:
-                            ctx["c"] = (ctx["b"] * Math.sin(Math.radians(ctx["C"]))) / Math.sin(Math.radians(ctx["B"])); changed = True
+                            ctx["c"] = (ctx["b"] * math.sin(math.radians(ctx["C"]))) / math.sin(math.radians(ctx["B"])); changed = True
                     if ctx["c"] > 0 and ctx["C"] > 0:
                         if ctx["a"] == 0 and ctx["A"] > 0:
-                            ctx["a"] = (ctx["c"] * Math.sin(Math.radians(ctx["A"]))) / Math.sin(Math.radians(ctx["C"])); changed = True
+                            ctx["a"] = (ctx["c"] * math.sin(math.radians(ctx["A"]))) / math.sin(math.radians(ctx["C"])); changed = True
                         if ctx["b"] == 0 and ctx["B"] > 0:
-                            ctx["b"] = (ctx["c"] * Math.sin(Math.radians(ctx["B"]))) / Math.sin(Math.radians(ctx["C"])); changed = True
+                            ctx["b"] = (ctx["c"] * math.sin(math.radians(ctx["B"]))) / math.sin(math.radians(ctx["C"])); changed = True
     
                 # SSA (ambiguous) - try to resolve using law of sines
                 # Example: given a and A, find B from b: sin(B) = b*sin(A)/a
@@ -209,12 +206,12 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     ks = ctx.get(known_side,0); ka = ctx.get(known_angle,0); ts = ctx.get(target_side,0)
                     if ks > 0 and ka > 0 and ts > 0 and ctx.get(target_key,0) == 0:
                         denom = ks
-                        ratio = (ts * Math.sin(Math.radians(ka))) / denom
+                        ratio = (ts * math.sin(math.radians(ka))) / denom
                         if ratio < -1 or ratio > 1:
                             # impossible for this relation; skip
                             continue
                         # principal solution
-                        ang_candidate = Math.degrees(Math.asin(clamp(ratio)))
+                        ang_candidate = math.degrees(math.asin(clamp(ratio)))
                         # check ambiguous supplement (180 - ang_candidate) if it fits the triangle
                         other = 180.0 - ang_candidate
                         # pick one that makes sense with sum < 180 with the third angle (if available)
@@ -262,7 +259,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     # Heron
                     val = s*(s-ctx["a"])*(s-ctx["b"])*(s-ctx["c"])
                     if val >= 0:
-                        ar = Math.sqrt(val)
+                        ar = math.sqrt(val)
                         ctx["area"] = ar
                         area.value = f"{round(ar,2)}"
                     else:
@@ -312,7 +309,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
             # medians
             def med(l1,l2,op):
                 try:
-                    return 0.5*Math.sqrt(2*l1*l1 + 2*l2*l2 - op*op)
+                    return 0.5*math.sqrt(2*l1*l1 + 2*l2*l2 - op*op)
                 except Exception:
                     return 0.0
             ma = med(ctx["b"], ctx["c"], ctx["a"]) if ctx["b"]>0 and ctx["c"]>0 else 0.0
