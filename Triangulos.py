@@ -1,4 +1,5 @@
 import flet as ft
+import flet.canvas as cv
 import math as Math
 
 # Importar el módulo corregido
@@ -47,6 +48,149 @@ def main_triangulo(page: ft.Page) -> ft.View:
     Mediana_mb = ft.TextField(label="Mediana mb", disabled=True, width=150)
     Mediana_mc = ft.TextField(label="Mediana mc", disabled=True, width=150)
 
+    # Canvas para dibujar el triángulo
+    canvas = cv.Canvas(
+        width=400,
+        height=400,
+        shapes=[],
+    )
+
+    canvas_container = ft.Container(
+        content=canvas,
+        width=420,
+        height=420,
+        border=ft.border.all(2, ft.Colors.BLUE_400),
+        border_radius=10,
+        padding=10,
+    )
+
+    def dibujar_triangulo(a, b, c, A_deg, B_deg, C_deg):
+        """Dibuja el triángulo en el canvas"""
+        if a <= 0 or b <= 0 or c <= 0:
+            return
+        
+        # Limpiar el canvas
+        canvas.shapes.clear()
+        
+        # Escalar el triángulo para que quepa en el canvas
+        max_lado = max(a, b, c)
+        escala = 300 / max_lado if max_lado > 0 else 1
+        
+        # Posicionar el triángulo en el canvas
+        # Punto A en la esquina inferior izquierda
+        ax, ay = 50, 350
+        
+        # Punto B en la esquina inferior derecha (distancia c)
+        bx, by = ax + c * escala, ay
+        
+        # Punto C usando coordenadas polares desde A
+        A_rad = Math.radians(A_deg) if A_deg > 0 else 0
+        cx = ax + b * escala * Math.cos(A_rad)
+        cy = ay - b * escala * Math.sin(A_rad)
+        
+        # Dibujar el triángulo
+        # Línea AB (lado c)
+        canvas.shapes.append(
+            cv.Line(
+                ax, ay, bx, by,
+                paint=ft.Paint(
+                    stroke_width=3,
+                    color=ft.Colors.BLUE_700,
+                    style=ft.PaintingStyle.STROKE,
+                ),
+            )
+        )
+        
+        # Línea BC (lado a)
+        canvas.shapes.append(
+            cv.Line(
+                bx, by, cx, cy,
+                paint=ft.Paint(
+                    stroke_width=3,
+                    color=ft.Colors.BLUE_700,
+                    style=ft.PaintingStyle.STROKE,
+                ),
+            )
+        )
+        
+        # Línea CA (lado b)
+        canvas.shapes.append(
+            cv.Line(
+                cx, cy, ax, ay,
+                paint=ft.Paint(
+                    stroke_width=3,
+                    color=ft.Colors.BLUE_700,
+                    style=ft.PaintingStyle.STROKE,
+                ),
+            )
+        )
+        
+        # Dibujar puntos en los vértices
+        radio = 5
+        for px, py, label in [(ax, ay, 'A'), (bx, by, 'B'), (cx, cy, 'C')]:
+            canvas.shapes.append(
+                cv.Circle(
+                    px, py, radio,
+                    paint=ft.Paint(
+                        color=ft.Colors.RED_700,
+                        style=ft.PaintingStyle.FILL,
+                    ),
+                )
+            )
+        
+        # Agregar etiquetas a los vértices
+        canvas.shapes.append(
+            cv.Text(
+                ax - 20, ay + 10, 
+                f"A",
+                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
+            )
+        )
+        canvas.shapes.append(
+            cv.Text(
+                bx + 10, by + 10,
+                f"B",
+                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
+            )
+        )
+        canvas.shapes.append(
+            cv.Text(
+                cx + 10, cy - 10,
+                f"C",
+                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
+            )
+        )
+        
+        # Agregar etiquetas de lados
+        # Lado c (entre A y B)
+        canvas.shapes.append(
+            cv.Text(
+                (ax + bx) / 2, ay + 20,
+                f"c={round(c, 2)}",
+                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
+            )
+        )
+        
+        # Lado a (entre B y C)
+        canvas.shapes.append(
+            cv.Text(
+                (bx + cx) / 2 + 10, (by + cy) / 2,
+                f"a={round(a, 2)}",
+                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
+            )
+        )
+        
+        # Lado b (entre C y A)
+        canvas.shapes.append(
+            cv.Text(
+                (cx + ax) / 2 - 30, (cy + ay) / 2,
+                f"b={round(b, 2)}",
+                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
+            )
+        )
+        
+        canvas.update()
+
     def clamp(x: float) -> float:
         """Limita un valor entre -1 y 1 para funciones trigonométricas"""
         return max(-1.0, min(1.0, x))
@@ -70,6 +214,8 @@ def main_triangulo(page: ft.Page) -> ft.View:
         Mediana_ma.value = ''
         Mediana_mb.value = ''
         Mediana_mc.value = ''
+        canvas.shapes.clear()
+        canvas.update()
         page.update()
 
     def calcular_click(e):
@@ -425,6 +571,10 @@ def main_triangulo(page: ft.Page) -> ft.View:
         if ctx["c"] > 0:
             lado_c.value = f'{round(ctx["c"], 2)}'
 
+        # Dibujar el triángulo si todos los valores están disponibles
+        if ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] > 0 and ctx["A"] > 0:
+            dibujar_triangulo(ctx["a"], ctx["b"], ctx["c"], ctx["A"], ctx["B"], ctx["C"])
+
         page.update()
 
     # Contenedor de lados y ángulos
@@ -485,16 +635,33 @@ def main_triangulo(page: ft.Page) -> ft.View:
         )
     )
 
+    # Columna principal con el canvas a la derecha
+    main_content = ft.Row(
+        controls=[
+            ft.Column(
+                controls=[
+                    lados_angulos,
+                    datos,
+                ],
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            canvas_container,
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        vertical_alignment=ft.CrossAxisAlignment.START,
+        spacing=20,
+    )
+
     # Columna principal
     column = ft.Column(
         controls=[
             controls.header_page(page),
-            lados_angulos,
-            datos,
+            main_content,
         ],
         scroll=ft.ScrollMode.AUTO,
         width=page.width,
-        height=page.height
+        height=page.height,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
     # Contenedor de contenido
