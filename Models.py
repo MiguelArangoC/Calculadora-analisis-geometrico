@@ -26,7 +26,7 @@ class Controls:
         return app_bar
     
     @staticmethod
-    def Buttons(e: ft.ControlEvent, Calcular: Callable, Limpiar: Callable) -> ft.Container:
+    def Buttons(e: ft.ControlEvent | None, Calcular: Callable, Limpiar: Callable) -> ft.Container:
         return ft.Container(
             content=ft.Row(
                 controls=[
