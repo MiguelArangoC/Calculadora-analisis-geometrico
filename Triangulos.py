@@ -528,4 +528,12 @@ def main_triangulo(page: ft.Page) -> ft.View:
         padding=0,
     )
     
-ft.app(main_triangulo)
+# En lugar de:
+# ft.app(main_triangulo)
+
+# Usa:
+def main(page: ft.Page):
+    view = main_triangulo(page)
+    page.add(*view.controls)
+
+ft.app(main)
