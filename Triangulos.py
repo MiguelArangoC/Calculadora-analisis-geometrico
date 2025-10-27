@@ -1,134 +1,121 @@
 import flet as ft
 import flet.canvas as cv
-import math as Math
-    
+import math
+
+# Importar los controles reutilizables
+from Models import Controls  
+
+
 def main_triangulo(page: ft.Page) -> ft.View:
-        page.title = "Resolución de Triángulo - Reestructurado"
-        page.vertical_alignment = ft.MainAxisAlignment.CENTER
-        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-        page.window.width = 1000
-        page.window.height = 700
-    
-        # --- UI controls ---
-        lado_a = ft.TextField(label="Lado a", width=230)
-        lado_b = ft.TextField(label="Lado b", width=230)
-        lado_c = ft.TextField(label="Lado c", width=230)
-        angulo_A = ft.TextField(label="Ángulo A (°)", width=230)
-        angulo_B = ft.TextField(label="Ángulo B (°)", width=230)
-        angulo_C = ft.TextField(label="Ángulo C (°)", width=230)
-    
-        area = ft.TextField(label="Área", disabled=True, width=160)
-        perimetro = ft.TextField(label="Perímetro", disabled=True, width=160)
-        semiperimetro = ft.TextField(label="Semiperímetro", disabled=True, width=160)
-        altura_ha = ft.TextField(label="Altura ha", disabled=True, width=160)
-        altura_hb = ft.TextField(label="Altura hb", disabled=True, width=160)
-        altura_hc = ft.TextField(label="Altura hc", disabled=True, width=160)
-        inradio = ft.TextField(label="Inradio", disabled=True, width=160)
-        circunradio = ft.TextField(label="Circunradio", disabled=True, width=160)
-        Mediana_ma = ft.TextField(label="Mediana ma", disabled=True, width=160)
-        Mediana_mb = ft.TextField(label="Mediana mb", disabled=True, width=160)
-        Mediana_mc = ft.TextField(label="Mediana mc", disabled=True, width=160)
-    
-        # Canvas (right side)
-        canvas = cv.Canvas(width=520, height=520, shapes=[])
-        canvas_container = ft.Container(content=canvas, width=520, height=520,
-                                      border=ft.border.all(1, ft.Colors.BLUE_200),
-                                      border_radius=8)
-    
-        # Utility functions
-        def clamp(x: float) -> float:
-            return max(-1.0, min(1.0, x))
-    
-        def show_snack(msg: str):
-            sb = ft.SnackBar(ft.Text(msg))
-            page.overlay.append(sb)
-            sb.open = True
-            page.update()
-    
-        def limpiar_todo(e=None):
-            for fld in [lado_a, lado_b, lado_c, angulo_A, angulo_B, angulo_C,
-                        area, perimetro, semiperimetro, altura_ha, altura_hb, altura_hc,
-                        inradio, circunradio, Mediana_ma, Mediana_mb, Mediana_mc]:
-                fld.value = ""
-            canvas.shapes.clear()
-            canvas.update()
-            page.update()
-    
-        def dibujar_triangulo(a, b, c, A_deg, B_deg, C_deg):
-            # Requires valid positive a,b,c and A in degrees
-            if a <= 0 or b <= 0 or c <= 0:
-                return
-            canvas.shapes.clear()
-            max_lado = max(a, b, c)
-            escala = 380 / max_lado if max_lado > 0 else 1
-            # Place A at (60,480), B to the right on same baseline
-            ax, ay = 60, 480
-            bx, by = ax + c * escala, ay
-            A_rad = Math.radians(A_deg)
-            cx = ax + b * escala * Math.cos(A_rad)
-            cy = ay - b * escala * Math.sin(A_rad)
-    
-            # triangle edges
-            for (x1, y1, x2, y2) in [(ax, ay, bx, by), (bx, by, cx, cy), (cx, cy, ax, ay)]:
-                canvas.shapes.append(cv.Line(x1, y1, x2, y2, paint=ft.Paint(stroke_width=3, color=ft.Colors.BLUE_700, style=ft.PaintingStyle.STROKE)))
-    
-            # vertices dots
-            for px, py in [(ax, ay), (bx, by), (cx, cy)]:
-                canvas.shapes.append(cv.Circle(px, py, 4, paint=ft.Paint(color=ft.Colors.RED_700, style=ft.PaintingStyle.FILL)))
-    
-            # labels
-            canvas.shapes.append(cv.Text(ax-18, ay+10, "A", ft.TextStyle(size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)))
-            canvas.shapes.append(cv.Text(bx+8, by+10, "B", ft.TextStyle(size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)))
-            canvas.shapes.append(cv.Text(cx+8, cy-12, "C", ft.TextStyle(size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)))
-    
-            # angle arcs - small arcs (only approximate display)
-            radio_arco = 30
-            if A_deg > 0:
-                canvas.shapes.append(cv.Arc(ax-radio_arco, ay-radio_arco, radio_arco*2, radio_arco*2, 0, A_deg, paint=ft.Paint(stroke_width=2, color=ft.Colors.RED_400, style=ft.PaintingStyle.STROKE), use_center=False))
-                canvas.shapes.append(cv.Text(ax+35, ay-20, f"{round(A_deg,1)}°", ft.TextStyle(size=11, color=ft.Colors.RED_400)))
-            if B_deg > 0:
-                ang_B = Math.degrees(Math.atan2(ay - by, ax - bx))
-                canvas.shapes.append(cv.Arc(bx-radio_arco, by-radio_arco, radio_arco*2, radio_arco*2, ang_B, B_deg, paint=ft.Paint(stroke_width=2, color=ft.Colors.ORANGE_400, style=ft.PaintingStyle.STROKE), use_center=False))
-                canvas.shapes.append(cv.Text(bx-45, by-20, f"{round(B_deg,1)}°", ft.TextStyle(size=11, color=ft.Colors.ORANGE_400)))
-            if C_deg > 0:
-                ang_C = Math.degrees(Math.atan2(by - cy, bx - cx))
-                canvas.shapes.append(cv.Arc(cx-radio_arco, cy-radio_arco, radio_arco*2, radio_arco*2, ang_C, C_deg, paint=ft.Paint(stroke_width=2, color=ft.Colors.PURPLE_400, style=ft.PaintingStyle.STROKE), use_center=False))
-                canvas.shapes.append(cv.Text(cx-10, cy+25, f"{round(C_deg,1)}°", ft.TextStyle(size=11, color=ft.Colors.PURPLE_400)))
-    
-            # sides labels
-            canvas.shapes.append(cv.Text((ax+bx)/2, ay+18, f"c={round(c,2)}", ft.TextStyle(size=12, color=ft.Colors.GREEN_700)))
-            canvas.shapes.append(cv.Text((bx+cx)/2+8, (by+cy)/2, f"a={round(a,2)}", ft.TextStyle(size=12, color=ft.Colors.GREEN_700)))
-            canvas.shapes.append(cv.Text((cx+ax)/2-30, (cy+ay)/2, f"b={round(b,2)}", ft.TextStyle(size=12, color=ft.Colors.GREEN_700)))
-            canvas.update()
-    
-        # Core calculation function
-        def calcular_click(e):
-            # parse inputs
-            def parse(f):
-                try:
-                    return float(f.value) if f.value not in (None, "") else 0.0
-                except Exception:
-                    return 0.0
-            ctx = {
-                "a": parse(lado_a),
-                "b": parse(lado_b),
-                "c": parse(lado_c),
-                "A": parse(angulo_A),
-                "B": parse(angulo_B),
-                "C": parse(angulo_C),
-            }
-    
-            # Counters
-            lados_known = sum(1 for k in ("a","b","c") if ctx[k] > 0)
-            ang_known = sum(1 for k in ("A","B","C") if ctx[k] > 0)
+    page.title = "Resolución de Triángulo"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.window.width = 1000
+    page.window.height = 700
+
+    # --- UI controls ---
+    lado_a = ft.TextField(label="Lado a", width=230, on_change=Controls.cambio_Textfield)
+    lado_b = ft.TextField(label="Lado b", width=230, on_change=Controls.cambio_Textfield)
+    lado_c = ft.TextField(label="Lado c", width=230, on_change=Controls.cambio_Textfield)
+    angulo_A = ft.TextField(label="Ángulo A (°)", width=230, on_change=Controls.cambio_Textfield)
+    angulo_B = ft.TextField(label="Ángulo B (°)", width=230, on_change=Controls.cambio_Textfield)
+    angulo_C = ft.TextField(label="Ángulo C (°)", width=230, on_change=Controls.cambio_Textfield)
+
+    area = ft.TextField(label="Área", disabled=True, width=160)
+    perimetro = ft.TextField(label="Perímetro", disabled=True, width=160)
+    semiperimetro = ft.TextField(label="Semiperímetro", disabled=True, width=160)
+    altura_ha = ft.TextField(label="Altura ha", disabled=True, width=160)
+    altura_hb = ft.TextField(label="Altura hb", disabled=True, width=160)
+    altura_hc = ft.TextField(label="Altura hc", disabled=True, width=160)
+    inradio = ft.TextField(label="Inradio", disabled=True, width=160)
+    circunradio = ft.TextField(label="Circunradio", disabled=True, width=160)
+    Mediana_ma = ft.TextField(label="Mediana ma", disabled=True, width=160)
+    Mediana_mb = ft.TextField(label="Mediana mb", disabled=True, width=160)
+    Mediana_mc = ft.TextField(label="Mediana mc", disabled=True, width=160)
+
+    # Canvas
+    canvas = cv.Canvas(width=520, height=520, shapes=[])
+    canvas_container = ft.Container(
+        content=canvas,
+        width=520, height=520,
+        border=ft.border.all(1, ft.Colors.BLUE_200),
+        border_radius=8,
+        bgcolor=ft.Colors.BLACK12
+    )
+
+    # Utilidades internas
+    def clamp(x): return max(-1.0, min(1.0, x))
+
+    def show_snack(msg):
+        sb = ft.SnackBar(ft.Text(msg))
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
+    def limpiar_todo(e=None):
+        for fld in [lado_a, lado_b, lado_c, angulo_A, angulo_B, angulo_C,
+                    area, perimetro, semiperimetro, altura_ha, altura_hb, altura_hc,
+                    inradio, circunradio, Mediana_ma, Mediana_mb, Mediana_mc]:
+            fld.value = ""
+        canvas.shapes.clear()
+        canvas.update()
+        page.update()
+
+    def dibujar_triangulo(a, b, c, A_deg, B_deg, C_deg):
+        if a <= 0 or b <= 0 or c <= 0:
+            return
+        canvas.shapes.clear()
+        max_lado = max(a, b, c)
+        escala = 380 / max_lado
+        ax, ay = 60, 480
+        bx, by = ax + c * escala, ay
+        A_rad = math.radians(A_deg)
+        cx = ax + b * escala * math.cos(A_rad)
+        cy = ay - b * escala * math.sin(A_rad)
+
+        # Dibujar lados
+        for (x1, y1, x2, y2) in [(ax, ay, bx, by), (bx, by, cx, cy), (cx, cy, ax, ay)]:
+            canvas.shapes.append(cv.Line(
+                x1, y1, x2, y2,
+                paint=ft.Paint(stroke_width=3, color=ft.Colors.BLUE_700, style=ft.PaintingStyle.STROKE)
+            ))
+
+        # Vértices
+        for px, py in [(ax, ay), (bx, by), (cx, cy)]:
+            canvas.shapes.append(cv.Circle(
+                px, py, 4,
+                paint=ft.Paint(color=ft.Colors.RED_700, style=ft.PaintingStyle.FILL)
+            ))
+        canvas.update()
+
+    # --- Cálculo principal ---
+    def calcular_click(e):
+        def parse(f):
+            try:
+                return float(f.value) if f.value not in ("", None) else 0.0
+            except:
+                return 0.0
+
+        ctx = {
+            "a": parse(lado_a),
+            "b": parse(lado_b),
+            "c": parse(lado_c),
+            "A": parse(angulo_A),
+            "B": parse(angulo_B),
+            "C": parse(angulo_C),
+        }
+
+    # Counters
+    lados_known = sum(1 for k in ("a","b","c") if ctx[k] > 0)
+    ang_known = sum(1 for k in ("A","B","C") if ctx[k] > 0)
     
             # basic validation
-            if lados_known + ang_known < 3:
+    if lados_known + ang_known < 3:
                 show_snack("Ingresar al menos 3 datos (combinación válida: SSS, SAS, ASA, AAS, SSA).")
-                return
+            return
     
             # --- Helper solvers ---
-            def law_of_cos_for_angle(opposite, side1, side2):
+    def law_of_cos_for_angle(opposite, side1, side2):
                 # opposite is side opposite target angle (a for A), returns angle in degrees
                 denom = 2 * side1 * side2
                 if denom == 0:
@@ -137,10 +124,10 @@ def main_triangulo(page: ft.Page) -> ft.View:
                 val = clamp(val)
                 return Math.degrees(Math.acos(val))
     
-            def law_of_cos_for_side(side1, side2, included_angle_deg):
+    def law_of_cos_for_side(side1, side2, included_angle_deg):
                 return Math.sqrt(side1*side1 + side2*side2 - 2*side1*side2*Math.cos(Math.radians(included_angle_deg)))
     
-            def law_of_sines_find_angle(known_side, known_angle_deg, target_side):
+    def law_of_sines_find_angle(known_side, known_angle_deg, target_side):
                 # returns angle in degrees using arcsin; handles domain by clamp
                 denom = known_side
                 if denom == 0:
@@ -154,10 +141,10 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     return 0.0
     
             # Attempt to solve progressively using standard cases
-            changed = True
-            iter_count = 0
-            ambiguous_alert = False
-            while changed and iter_count < 15:
+    changed = True
+    iter_count = 0
+    ambiguous_alert = False
+    while changed and iter_count < 15:
                 changed = False
                 iter_count += 1
     
@@ -349,41 +336,48 @@ def main_triangulo(page: ft.Page) -> ft.View:
                 dibujar_triangulo(ctx["a"], ctx["b"], ctx["c"], ctx["A"], ctx["B"], ctx["C"])
     
             page.update()
-    
-        # Build the layout
-        lados_angulos = ft.Column(controls=[
-            ft.Row(controls=[lado_a, angulo_A], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[lado_b, angulo_B], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[lado_c, angulo_C], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[
-                ft.ElevatedButton("Calcular", on_click=calcular_click),
-                ft.ElevatedButton("Limpiar", on_click=limpiar_todo)
-            ], alignment=ft.MainAxisAlignment.CENTER),
-        ], spacing=10)
-    
-        datos = ft.Column(controls=[
-            ft.Row(controls=[area, perimetro, semiperimetro], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[altura_ha, altura_hb, altura_hc], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[Mediana_ma, Mediana_mb, Mediana_mc], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Row(controls=[inradio, circunradio], alignment=ft.MainAxisAlignment.CENTER),
-        ], spacing=10)
-    
-        left_col = ft.Column(controls=[lados_angulos, datos], scroll=ft.ScrollMode.AUTO, width=430)
-    
-        main_row = ft.Row(controls=[left_col, canvas_container], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
-    
-        column = ft.Column(controls=[main_row], width=page.window.width, height=page.window.height)
-    
-        return ft.View("/Triangulo", [column], padding=0)
-    
-    
+
+    # Interfaz
+    header = Controls.header_page(page)
+
+    left_col = ft.Column(
+        controls=[
+            ft.Row(controls=[lado_a, angulo_A]),
+            ft.Row(controls=[lado_b, angulo_B]),
+            ft.Row(controls=[lado_c, angulo_C]),
+            Controls.Buttons(None, calcular_click, limpiar_todo),
+            ft.Row(controls=[area, perimetro, semiperimetro]),
+            ft.Row(controls=[altura_ha, altura_hb, altura_hc]),
+            ft.Row(controls=[Mediana_ma, Mediana_mb, Mediana_mc]),
+            ft.Row(controls=[inradio, circunradio]),
+        ],
+        spacing=10,
+        width=430,
+        scroll=ft.ScrollMode.AUTO
+    )
+
+    body = ft.Row(
+        controls=[left_col, canvas_container],
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=20
+    )
+
+    content = ft.Column(
+        controls=[header, body],
+        expand=True
+    )
+
+    return ft.View("/Triangulo", [content], padding=0)
+
+
 def main(page: ft.Page):
-        view = main_triangulo(page)
-        page.add(*view.controls)
-    
-    
+    view = main_triangulo(page)
+    page.views.append(view)
+    page.update()
+
+
 if __name__ == "__main__":
-        try:
-            ft.app(main)
-        except Exception as ex:
-            print("Error al iniciar la app:", ex)
+    try:
+        ft.app(main)
+    except Exception as ex:
+        print("Error al iniciar la app:", ex)
