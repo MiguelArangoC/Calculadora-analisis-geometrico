@@ -172,6 +172,8 @@ class Controls:
             random.seed()
             for i in range(len(parts)):
                 c = canvas.controls[i]
+                if not isinstance(c, ft.Container):
+                    continue
                 part_size = random.randrange(int(size / 2), int(size * 3))
                 c.left = random.randrange(0, width)
                 c.top = random.randrange(0, height)
@@ -189,6 +191,9 @@ class Controls:
             i = 0
             for left, top, bgcolor in parts:
                 c = canvas.controls[i]
+                if not isinstance(c, ft.Container):
+                    i += 1
+                    continue
                 c.left = left * (size + gap)
                 c.top = top * (size + gap)
                 c.bgcolor = bgcolor
@@ -201,6 +206,7 @@ class Controls:
             canvas.opacity = 1
             go_button.visible = False
             page.update()
+
 
         go_button = ft.ElevatedButton("Go!", on_click=assemble, visible=True)
                 
@@ -237,13 +243,13 @@ class Controls:
             width=page_width,
             height=page_height,
         )
-        
+
         # Generar contenedores aleatorios
         for _ in range(num_containers):
             x_pos = random.randrange(30, page_width)
             y_pos = random.randrange(30, page_height)
             part_size = random.randrange(int(size / 2), int(size * 3))
-            color = ft.Colors.Random_Color()
+            color = ft.Colors.random()
 
             container = ft.Container(
                 width=part_size,

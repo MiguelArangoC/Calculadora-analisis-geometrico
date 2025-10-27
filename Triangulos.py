@@ -177,8 +177,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
                         ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_seno_ALL: {ex}")
-                page.snack_bar = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
-                page.snack_bar.open = True
+                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                page.overlay.append(snack)
+                snack.open = True
                 page.update()
 
         def ley_coseno_LLL():
@@ -206,8 +207,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_coseno_LLL: {ex}")
-                page.snack_bar = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
-                page.snack_bar.open = True
+                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                page.overlay.append(snack)
+                snack.open = True
                 page.update()
 
         def ley_seno_ALA():
@@ -265,8 +267,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_seno_ALA: {ex}")
-                page.snack_bar = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
-                page.snack_bar.open = True
+                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                page.overlay.append(snack)
+                snack.open = True
                 page.update()
 
         def ley_coseno_LAL():
@@ -291,8 +294,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_coseno_LAL: {ex}")
-                page.snack_bar = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
-                page.snack_bar.open = True
+                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                page.overlay.append(snack)
+                snack.open = True
                 page.update()
 
         # Iterar para intentar resolver incógnitas
@@ -503,7 +507,6 @@ def main_triangulo(page: ft.Page) -> ft.View:
     # Stack con fondo y contenido
     stack = ft.Stack(
         [
-            controls.background(ft.Container),
             controls.containers(page),
             content,
         ], 
@@ -525,4 +528,4 @@ def main_triangulo(page: ft.Page) -> ft.View:
         padding=0,
     )
     
-    ft.app(main_triangulo)
+ft.app(main_triangulo)
