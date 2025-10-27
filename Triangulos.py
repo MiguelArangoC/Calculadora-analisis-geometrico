@@ -5,8 +5,10 @@ import math as Math
 # Importar el módulo corregido
 try:
     from Models import Controls
+
     controls = Controls()
 except Exception:
+
     class _ControlsFallback:
         @staticmethod
         def header_page(page):
@@ -19,7 +21,7 @@ except Exception:
         @staticmethod
         def containers(page):
             return ft.Container()
-    
+
     controls = _ControlsFallback()
 
 
@@ -48,148 +50,219 @@ def main_triangulo(page: ft.Page) -> ft.View:
     Mediana_mb = ft.TextField(label="Mediana mb", disabled=True, width=150)
     Mediana_mc = ft.TextField(label="Mediana mc", disabled=True, width=150)
 
-    # Canvas para dibujar el triángulo
-    canvas = cv.Canvas(
-        width=400,
-        height=400,
-        shapes=[],
-    )
-
-    canvas_container = ft.Container(
-        content=canvas,
-        width=420,
-        height=420,
-        border=ft.border.all(2, ft.Colors.BLUE_400),
-        border_radius=10,
-        padding=10,
-    )
-
     def dibujar_triangulo(a, b, c, A_deg, B_deg, C_deg):
-        """Dibuja el triángulo en el canvas"""
         if a <= 0 or b <= 0 or c <= 0:
             return
-        
+
         # Limpiar el canvas
-        canvas.shapes.clear()
-        
-        # Escalar el triángulo para que quepa en el canvas
-        max_lado = max(a, b, c)
-        escala = 300 / max_lado if max_lado > 0 else 1
-        
-        # Posicionar el triángulo en el canvas
-        # Punto A en la esquina inferior izquierda
-        ax, ay = 50, 350
-        
-        # Punto B en la esquina inferior derecha (distancia c)
-        bx, by = ax + c * escala, ay
-        
-        # Punto C usando coordenadas polares desde A
-        A_rad = Math.radians(A_deg) if A_deg > 0 else 0
-        cx = ax + b * escala * Math.cos(A_rad)
-        cy = ay - b * escala * Math.sin(A_rad)
-        
-        # Dibujar el triángulo
-        # Línea AB (lado c)
-        canvas.shapes.append(
-            cv.Line(
-                ax, ay, bx, by,
+        cv.shapes.clear()
+
+    # Escalar el triángulo para que quepa en el cv
+    max_lado = max(a, b, c)
+    escala = 300 / max_lado if max_lado > 0 else 1
+
+    # Posicionar el triángulo en el cv
+    ax, ay = 50, 350  # Punto A
+    bx, by = ax + c * escala, ay  # Punto B
+    A_rad = Math.radians(A_deg) if A_deg > 0 else 0
+    cx = ax + b * escala * Math.cos(A_rad)
+    cy = ay - b * escala * Math.sin(A_rad)
+
+    # Dibujar triángulo
+    cv.shapes.append(
+        cv.Line(
+            ax,
+            ay,
+            bx,
+            by,
+            paint=ft.Paint(
+                stroke_width=3, color=ft.Colors.BLUE_700, style=ft.PaintingStyle.STROKE
+            ),
+        )
+    )
+    cv.shapes.append(
+        cv.Line(
+            bx,
+            by,
+            cx,
+            cy,
+            paint=ft.Paint(
+                stroke_width=3, color=ft.Colors.BLUE_700, style=ft.PaintingStyle.STROKE
+            ),
+        )
+    )
+    cv.shapes.append(
+        cv.Line(
+            cx,
+            cy,
+            ax,
+            ay,
+            paint=ft.Paint(
+                stroke_width=3, color=ft.Colors.BLUE_700, style=ft.PaintingStyle.STROKE
+            ),
+        )
+    )
+
+    # Dibujar arcos de ángulos
+    radio_arco = 30
+
+    if A_deg > 0:
+        cv.shapes.append(
+            cv.Arc(
+                ax - radio_arco,
+                ay - radio_arco,
+                radio_arco * 2,
+                radio_arco * 2,
+                0,
+                A_deg,
                 paint=ft.Paint(
-                    stroke_width=3,
-                    color=ft.Colors.BLUE_700,
+                    stroke_width=2,
+                    color=ft.Colors.RED_400,
                     style=ft.PaintingStyle.STROKE,
+                ),
+                use_center=False,
+            )
+        )
+
+    if B_deg > 0:
+        angulo_BA = Math.degrees(Math.atan2(ay - by, ax - bx))
+        cv.shapes.append(
+            cv.Arc(
+                bx - radio_arco,
+                by - radio_arco,
+                radio_arco * 2,
+                radio_arco * 2,
+                angulo_BA,
+                B_deg,
+                paint=ft.Paint(
+                    stroke_width=2,
+                    color=ft.Colors.ORANGE_400,
+                    style=ft.PaintingStyle.STROKE,
+                ),
+                use_center=False,
+            )
+        )
+
+    if C_deg > 0:
+        angulo_CB = Math.degrees(Math.atan2(by - cy, bx - cx))
+        cv.shapes.append(
+            cv.Arc(
+                cx - radio_arco,
+                cy - radio_arco,
+                radio_arco * 2,
+                radio_arco * 2,
+                angulo_CB,
+                C_deg,
+                paint=ft.Paint(
+                    stroke_width=2,
+                    color=ft.Colors.PURPLE_400,
+                    style=ft.PaintingStyle.STROKE,
+                ),
+                use_center=False,
+            )
+        )
+
+    # Dibujar puntos en los vértices
+    radio = 5
+    for px, py, label in [(ax, ay, "A"), (bx, by, "B"), (cx, cy, "C")]:
+        cv.shapes.append(
+            cv.Circle(
+                px,
+                py,
+                radio,
+                paint=ft.Paint(color=ft.Colors.RED_700, style=ft.PaintingStyle.FILL),
+            )
+        )
+
+    # Etiquetas de vértices
+    cv.shapes.append(
+        cv.Text(
+            ax - 20,
+            ay + 10,
+            "A",
+            ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+        )
+    )
+    cv.shapes.append(
+        cv.Text(
+            bx + 10,
+            by + 10,
+            "B",
+            ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+        )
+    )
+    cv.shapes.append(
+        cv.Text(
+            cx + 10,
+            cy - 10,
+            "C",
+            ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+        )
+    )
+
+    # Etiquetas de ángulos
+    if A_deg > 0:
+        cv.shapes.append(
+            cv.Text(
+                ax + 35,
+                ay - 20,
+                f"{round(A_deg, 1)}°",
+                ft.TextStyle(
+                    size=11, color=ft.Colors.RED_400, weight=ft.FontWeight.BOLD
                 ),
             )
         )
-        
-        # Línea BC (lado a)
-        canvas.shapes.append(
-            cv.Line(
-                bx, by, cx, cy,
-                paint=ft.Paint(
-                    stroke_width=3,
-                    color=ft.Colors.BLUE_700,
-                    style=ft.PaintingStyle.STROKE,
+    if B_deg > 0:
+        cv.shapes.append(
+            cv.Text(
+                bx - 45,
+                by - 20,
+                f"{round(B_deg, 1)}°",
+                ft.TextStyle(
+                    size=11, color=ft.Colors.ORANGE_400, weight=ft.FontWeight.BOLD
                 ),
             )
         )
-        
-        # Línea CA (lado b)
-        canvas.shapes.append(
-            cv.Line(
-                cx, cy, ax, ay,
-                paint=ft.Paint(
-                    stroke_width=3,
-                    color=ft.Colors.BLUE_700,
-                    style=ft.PaintingStyle.STROKE,
+    if C_deg > 0:
+        cv.shapes.append(
+            cv.Text(
+                cx - 10,
+                cy + 25,
+                f"{round(C_deg, 1)}°",
+                ft.TextStyle(
+                    size=11, color=ft.Colors.PURPLE_400, weight=ft.FontWeight.BOLD
                 ),
             )
         )
-        
-        # Dibujar puntos en los vértices
-        radio = 5
-        for px, py, label in [(ax, ay, 'A'), (bx, by, 'B'), (cx, cy, 'C')]:
-            canvas.shapes.append(
-                cv.Circle(
-                    px, py, radio,
-                    paint=ft.Paint(
-                        color=ft.Colors.RED_700,
-                        style=ft.PaintingStyle.FILL,
-                    ),
-                )
-            )
-        
-        # Agregar etiquetas a los vértices
-        canvas.shapes.append(
-            cv.Text(
-                ax - 20, ay + 10, 
-                f"A",
-                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
-            )
+
+    # Etiquetas de lados
+    cv.shapes.append(
+        cv.Text(
+            (ax + bx) / 2,
+            ay + 20,
+            f"c={round(c, 2)}",
+            ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
         )
-        canvas.shapes.append(
-            cv.Text(
-                bx + 10, by + 10,
-                f"B",
-                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
-            )
+    )
+    cv.shapes.append(
+        cv.Text(
+            (bx + cx) / 2 + 10,
+            (by + cy) / 2,
+            f"a={round(a, 2)}",
+            ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
         )
-        canvas.shapes.append(
-            cv.Text(
-                cx + 10, cy - 10,
-                f"C",
-                ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
-            )
+    )
+    cv.shapes.append(
+        cv.Text(
+            (cx + ax) / 2 - 30,
+            (cy + ay) / 2,
+            f"b={round(b, 2)}",
+            ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
         )
-        
-        # Agregar etiquetas de lados
-        # Lado c (entre A y B)
-        canvas.shapes.append(
-            cv.Text(
-                (ax + bx) / 2, ay + 20,
-                f"c={round(c, 2)}",
-                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
-            )
-        )
-        
-        # Lado a (entre B y C)
-        canvas.shapes.append(
-            cv.Text(
-                (bx + cx) / 2 + 10, (by + cy) / 2,
-                f"a={round(a, 2)}",
-                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
-            )
-        )
-        
-        # Lado b (entre C y A)
-        canvas.shapes.append(
-            cv.Text(
-                (cx + ax) / 2 - 30, (cy + ay) / 2,
-                f"b={round(b, 2)}",
-                ft.TextStyle(size=12, color=ft.Colors.GREEN_700),
-            )
-        )
-        
-        canvas.update()
+    )
+
+    # Actualizar cv
+    cv.update()
 
     def clamp(x: float) -> float:
         """Limita un valor entre -1 y 1 para funciones trigonométricas"""
@@ -197,23 +270,23 @@ def main_triangulo(page: ft.Page) -> ft.View:
 
     def Limpiar_triangulo(e):
         """Limpia todos los campos del formulario"""
-        lado_a.value = ''
-        lado_b.value = ''
-        lado_c.value = ''
-        angulo_a.value = ''
-        angulo_b.value = ''
-        angulo_c.value = ''
-        area.value = ''
-        perimetro.value = ''
-        semiperimetro.value = ''
-        altura_ha.value = ''
-        altura_hb.value = ''
-        altura_hc.value = ''
-        inradio.value = ''
-        circunradio.value = ''
-        Mediana_ma.value = ''
-        Mediana_mb.value = ''
-        Mediana_mc.value = ''
+        lado_a.value = ""
+        lado_b.value = ""
+        lado_c.value = ""
+        angulo_a.value = ""
+        angulo_b.value = ""
+        angulo_c.value = ""
+        area.value = ""
+        perimetro.value = ""
+        semiperimetro.value = ""
+        altura_ha.value = ""
+        altura_hb.value = ""
+        altura_hc.value = ""
+        inradio.value = ""
+        circunradio.value = ""
+        Mediana_ma.value = ""
+        Mediana_mb.value = ""
+        Mediana_mc.value = ""
         canvas.shapes.clear()
         canvas.update()
         page.update()
@@ -222,10 +295,16 @@ def main_triangulo(page: ft.Page) -> ft.View:
         """Calcula todas las propiedades del triángulo"""
         # Contexto mutable para valores
         ctx = {
-            "a": 0.0, "b": 0.0, "c": 0.0,
-            "A": 0.0, "B": 0.0, "C": 0.0,
-            "angulos_faltantes": 0, "lados_faltantes": 0,
-            "area": 0.0, "semiperimetro": 0.0
+            "a": 0.0,
+            "b": 0.0,
+            "c": 0.0,
+            "A": 0.0,
+            "B": 0.0,
+            "C": 0.0,
+            "angulos_faltantes": 0,
+            "lados_faltantes": 0,
+            "area": 0.0,
+            "semiperimetro": 0.0,
         }
 
         # Leer campos (si no convertible, contar como faltante)
@@ -236,7 +315,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
         except (ValueError, TypeError):
             ctx["a"] = 0.0
             ctx["lados_faltantes"] += 1
-            
+
         try:
             ctx["b"] = float(lado_b.value) if lado_b.value else 0.0
             if ctx["b"] == 0.0:
@@ -244,7 +323,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
         except (ValueError, TypeError):
             ctx["b"] = 0.0
             ctx["lados_faltantes"] += 1
-            
+
         try:
             ctx["c"] = float(lado_c.value) if lado_c.value else 0.0
             if ctx["c"] == 0.0:
@@ -252,7 +331,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
         except (ValueError, TypeError):
             ctx["c"] = 0.0
             ctx["lados_faltantes"] += 1
-            
+
         try:
             ctx["A"] = float(angulo_a.value) if angulo_a.value else 0.0
             if ctx["A"] == 0.0:
@@ -260,7 +339,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
         except (ValueError, TypeError):
             ctx["A"] = 0.0
             ctx["angulos_faltantes"] += 1
-            
+
         try:
             ctx["B"] = float(angulo_b.value) if angulo_b.value else 0.0
             if ctx["B"] == 0.0:
@@ -268,7 +347,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
         except (ValueError, TypeError):
             ctx["B"] = 0.0
             ctx["angulos_faltantes"] += 1
-            
+
         try:
             ctx["C"] = float(angulo_c.value) if angulo_c.value else 0.0
             if ctx["C"] == 0.0:
@@ -293,7 +372,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
                         ctx["C"] = Math.degrees(Math.asin(ratio))
                         angulo_c.value = f'{round(ctx["C"], 2)}'
                         ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
-                        
+
                 elif ctx["B"] != 0 and ctx["b"] != 0:
                     if ctx["a"] != 0 and ctx["A"] == 0:
                         ratio = (ctx["a"] * Math.sin(Math.radians(ctx["B"]))) / ctx["b"]
@@ -307,7 +386,7 @@ def main_triangulo(page: ft.Page) -> ft.View:
                         ctx["C"] = Math.degrees(Math.asin(ratio))
                         angulo_c.value = f'{round(ctx["C"], 2)}'
                         ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
-                        
+
                 elif ctx["C"] != 0 and ctx["c"] != 0:
                     if ctx["a"] != 0 and ctx["A"] == 0:
                         ratio = (ctx["a"] * Math.sin(Math.radians(ctx["C"]))) / ctx["c"]
@@ -323,7 +402,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
                         ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_seno_ALL: {ex}")
-                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                snack = ft.SnackBar(
+                    ft.Text("Error: Verifica que los datos digitados sean correctos")
+                )
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
@@ -332,28 +413,42 @@ def main_triangulo(page: ft.Page) -> ft.View:
             """Aplica ley del coseno para caso LLL (tres lados conocidos)"""
             try:
                 if ctx["A"] == 0 and ctx["b"] != 0 and ctx["c"] != 0 and ctx["a"] != 0:
-                    val = (Math.pow(ctx["b"], 2) + Math.pow(ctx["c"], 2) - Math.pow(ctx["a"], 2)) / (2.0 * ctx["b"] * ctx["c"])
+                    val = (
+                        Math.pow(ctx["b"], 2)
+                        + Math.pow(ctx["c"], 2)
+                        - Math.pow(ctx["a"], 2)
+                    ) / (2.0 * ctx["b"] * ctx["c"])
                     val = clamp(val)
                     ctx["A"] = Math.degrees(Math.acos(val))
                     angulo_a.value = f'{round(ctx["A"], 2)}'
                     ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
-                    
+
                 if ctx["B"] == 0 and ctx["a"] != 0 and ctx["c"] != 0 and ctx["b"] != 0:
-                    val = (Math.pow(ctx["a"], 2) + Math.pow(ctx["c"], 2) - Math.pow(ctx["b"], 2)) / (2.0 * ctx["a"] * ctx["c"])
+                    val = (
+                        Math.pow(ctx["a"], 2)
+                        + Math.pow(ctx["c"], 2)
+                        - Math.pow(ctx["b"], 2)
+                    ) / (2.0 * ctx["a"] * ctx["c"])
                     val = clamp(val)
                     ctx["B"] = Math.degrees(Math.acos(val))
                     angulo_b.value = f'{round(ctx["B"], 2)}'
                     ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
-                    
+
                 if ctx["C"] == 0 and ctx["a"] != 0 and ctx["b"] != 0 and ctx["c"] != 0:
-                    val = (Math.pow(ctx["a"], 2) + Math.pow(ctx["b"], 2) - Math.pow(ctx["c"], 2)) / (2.0 * ctx["a"] * ctx["b"])
+                    val = (
+                        Math.pow(ctx["a"], 2)
+                        + Math.pow(ctx["b"], 2)
+                        - Math.pow(ctx["c"], 2)
+                    ) / (2.0 * ctx["a"] * ctx["b"])
                     val = clamp(val)
                     ctx["C"] = Math.degrees(Math.acos(val))
                     angulo_c.value = f'{round(ctx["C"], 2)}'
                     ctx["angulos_faltantes"] = max(0, ctx["angulos_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_coseno_LLL: {ex}")
-                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                snack = ft.SnackBar(
+                    ft.Text("Error: Verifica que los datos digitados sean correctos")
+                )
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
@@ -380,11 +475,15 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     denom = Math.sin(Math.radians(ctx["A"]))
                     if denom != 0:
                         if ctx["b"] == 0 and ctx["B"] != 0:
-                            ctx["b"] = (ctx["a"] * Math.sin(Math.radians(ctx["B"]))) / denom
+                            ctx["b"] = (
+                                ctx["a"] * Math.sin(Math.radians(ctx["B"]))
+                            ) / denom
                             lado_b.value = f'{round(ctx["b"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
                         if ctx["c"] == 0 and ctx["C"] != 0:
-                            ctx["c"] = (ctx["a"] * Math.sin(Math.radians(ctx["C"]))) / denom
+                            ctx["c"] = (
+                                ctx["a"] * Math.sin(Math.radians(ctx["C"]))
+                            ) / denom
                             lado_c.value = f'{round(ctx["c"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
 
@@ -392,11 +491,15 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     denom = Math.sin(Math.radians(ctx["B"]))
                     if denom != 0:
                         if ctx["a"] == 0 and ctx["A"] != 0:
-                            ctx["a"] = (ctx["b"] * Math.sin(Math.radians(ctx["A"]))) / denom
+                            ctx["a"] = (
+                                ctx["b"] * Math.sin(Math.radians(ctx["A"]))
+                            ) / denom
                             lado_a.value = f'{round(ctx["a"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
                         if ctx["c"] == 0 and ctx["C"] != 0:
-                            ctx["c"] = (ctx["b"] * Math.sin(Math.radians(ctx["C"]))) / denom
+                            ctx["c"] = (
+                                ctx["b"] * Math.sin(Math.radians(ctx["C"]))
+                            ) / denom
                             lado_c.value = f'{round(ctx["c"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
 
@@ -404,16 +507,22 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     denom = Math.sin(Math.radians(ctx["C"]))
                     if denom != 0:
                         if ctx["a"] == 0 and ctx["A"] != 0:
-                            ctx["a"] = (ctx["c"] * Math.sin(Math.radians(ctx["A"]))) / denom
+                            ctx["a"] = (
+                                ctx["c"] * Math.sin(Math.radians(ctx["A"]))
+                            ) / denom
                             lado_a.value = f'{round(ctx["a"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
                         if ctx["b"] == 0 and ctx["B"] != 0:
-                            ctx["b"] = (ctx["c"] * Math.sin(Math.radians(ctx["B"]))) / denom
+                            ctx["b"] = (
+                                ctx["c"] * Math.sin(Math.radians(ctx["B"]))
+                            ) / denom
                             lado_b.value = f'{round(ctx["b"], 2)}'
                             ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_seno_ALA: {ex}")
-                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                snack = ft.SnackBar(
+                    ft.Text("Error: Verifica que los datos digitados sean correctos")
+                )
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
@@ -422,25 +531,36 @@ def main_triangulo(page: ft.Page) -> ft.View:
             """Aplica ley del coseno para caso LAL (dos lados y ángulo entre ellos)"""
             try:
                 if ctx["a"] == 0 and ctx["b"] != 0 and ctx["c"] != 0 and ctx["A"] != 0:
-                    ctx["a"] = Math.sqrt(Math.pow(ctx["b"], 2) + Math.pow(ctx["c"], 2) - 
-                                        2 * ctx["b"] * ctx["c"] * Math.cos(Math.radians(ctx["A"])))
+                    ctx["a"] = Math.sqrt(
+                        Math.pow(ctx["b"], 2)
+                        + Math.pow(ctx["c"], 2)
+                        - 2 * ctx["b"] * ctx["c"] * Math.cos(Math.radians(ctx["A"]))
+                    )
                     lado_a.value = f'{round(ctx["a"], 2)}'
                     ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
-                    
+
                 if ctx["b"] == 0 and ctx["a"] != 0 and ctx["c"] != 0 and ctx["B"] != 0:
-                    ctx["b"] = Math.sqrt(Math.pow(ctx["a"], 2) + Math.pow(ctx["c"], 2) - 
-                                        2 * ctx["a"] * ctx["c"] * Math.cos(Math.radians(ctx["B"])))
+                    ctx["b"] = Math.sqrt(
+                        Math.pow(ctx["a"], 2)
+                        + Math.pow(ctx["c"], 2)
+                        - 2 * ctx["a"] * ctx["c"] * Math.cos(Math.radians(ctx["B"]))
+                    )
                     lado_b.value = f'{round(ctx["b"], 2)}'
                     ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
-                    
+
                 if ctx["c"] == 0 and ctx["a"] != 0 and ctx["b"] != 0 and ctx["C"] != 0:
-                    ctx["c"] = Math.sqrt(Math.pow(ctx["a"], 2) + Math.pow(ctx["b"], 2) - 
-                                        2 * ctx["a"] * ctx["b"] * Math.cos(Math.radians(ctx["C"])))
+                    ctx["c"] = Math.sqrt(
+                        Math.pow(ctx["a"], 2)
+                        + Math.pow(ctx["b"], 2)
+                        - 2 * ctx["a"] * ctx["b"] * Math.cos(Math.radians(ctx["C"]))
+                    )
                     lado_c.value = f'{round(ctx["c"], 2)}'
                     ctx["lados_faltantes"] = max(0, ctx["lados_faltantes"] - 1)
             except Exception as ex:
                 print(f"Error en ley_coseno_LAL: {ex}")
-                snack = ft.SnackBar(ft.Text("Error: Verifica que los datos digitados sean correctos"))
+                snack = ft.SnackBar(
+                    ft.Text("Error: Verifica que los datos digitados sean correctos")
+                )
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
@@ -448,10 +568,12 @@ def main_triangulo(page: ft.Page) -> ft.View:
         # Iterar para intentar resolver incógnitas
         max_iterations = 10
         i = 0
-        while (ctx["angulos_faltantes"] > 0 or ctx["lados_faltantes"] > 0) and i < max_iterations:
+        while (
+            ctx["angulos_faltantes"] > 0 or ctx["lados_faltantes"] > 0
+        ) and i < max_iterations:
             prev_angulos = ctx["angulos_faltantes"]
             prev_lados = ctx["lados_faltantes"]
-            
+
             if ctx["a"] == 0 or ctx["b"] == 0 or ctx["c"] == 0:
                 if ctx["angulos_faltantes"] <= 2 and ctx["lados_faltantes"] <= 1:
                     ley_coseno_LAL()
@@ -461,11 +583,14 @@ def main_triangulo(page: ft.Page) -> ft.View:
                     ley_seno_ALA()
             else:
                 ley_coseno_LLL()
-            
+
             # Si no hubo cambios, salir del bucle
-            if prev_angulos == ctx["angulos_faltantes"] and prev_lados == ctx["lados_faltantes"]:
+            if (
+                prev_angulos == ctx["angulos_faltantes"]
+                and prev_lados == ctx["lados_faltantes"]
+            ):
                 break
-            
+
             i += 1
 
         # Calcular semiperimetro
@@ -473,23 +598,28 @@ def main_triangulo(page: ft.Page) -> ft.View:
             if ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] > 0:
                 s = (ctx["a"] + ctx["b"] + ctx["c"]) / 2
                 ctx["semiperimetro"] = s
-                semiperimetro.value = f'{round(s, 2)}'
+                semiperimetro.value = f"{round(s, 2)}"
             else:
-                semiperimetro.value = ''
+                semiperimetro.value = ""
         except Exception:
-            semiperimetro.value = ''
+            semiperimetro.value = ""
 
         # Calcular área (Fórmula de Herón)
         try:
             s = ctx["semiperimetro"]
-            if s > 0 and (s - ctx["a"]) >= 0 and (s - ctx["b"]) >= 0 and (s - ctx["c"]) >= 0:
+            if (
+                s > 0
+                and (s - ctx["a"]) >= 0
+                and (s - ctx["b"]) >= 0
+                and (s - ctx["c"]) >= 0
+            ):
                 ar = Math.sqrt(s * (s - ctx["a"]) * (s - ctx["b"]) * (s - ctx["c"]))
                 ctx["area"] = ar
-                area.value = f'{round(ar, 2)}' if ar > 0 else ''
+                area.value = f"{round(ar, 2)}" if ar > 0 else ""
             else:
-                area.value = ''
+                area.value = ""
         except Exception:
-            area.value = ''
+            area.value = ""
 
         # Calcular alturas
         def calcular_altura(area_val: float, base: float) -> float:
@@ -504,37 +634,41 @@ def main_triangulo(page: ft.Page) -> ft.View:
         ha = calcular_altura(ctx["area"], ctx["a"])
         hb = calcular_altura(ctx["area"], ctx["b"])
         hc = calcular_altura(ctx["area"], ctx["c"])
-        
-        altura_ha.value = f'{round(ha, 2)}' if ha > 0 else ''
-        altura_hb.value = f'{round(hb, 2)}' if hb > 0 else ''
-        altura_hc.value = f'{round(hc, 2)}' if hc > 0 else ''
+
+        altura_ha.value = f"{round(ha, 2)}" if ha > 0 else ""
+        altura_hb.value = f"{round(hb, 2)}" if hb > 0 else ""
+        altura_hc.value = f"{round(hc, 2)}" if hc > 0 else ""
 
         # Calcular inradio
         try:
             if ctx["semiperimetro"] > 0 and ctx["area"] > 0:
                 ir = ctx["area"] / ctx["semiperimetro"]
-                inradio.value = f'{round(ir, 2)}'
+                inradio.value = f"{round(ir, 2)}"
             else:
-                inradio.value = ''
+                inradio.value = ""
         except Exception:
-            inradio.value = ''
+            inradio.value = ""
 
         # Calcular circunradio
         try:
             if ctx["area"] > 0 and ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] > 0:
                 cr = (ctx["a"] * ctx["b"] * ctx["c"]) / (4 * ctx["area"])
-                circunradio.value = f'{round(cr, 2)}'
+                circunradio.value = f"{round(cr, 2)}"
             else:
-                circunradio.value = ''
+                circunradio.value = ""
         except Exception:
-            circunradio.value = ''
+            circunradio.value = ""
 
         # Calcular medianas
         def calcular_mediana(lado1: float, lado2: float, lado_opuesto: float) -> float:
             """Calcula la mediana usando la fórmula de mediana"""
             try:
                 if lado1 > 0 and lado2 > 0 and lado_opuesto >= 0:
-                    return 0.5 * Math.sqrt(2 * Math.pow(lado1, 2) + 2 * Math.pow(lado2, 2) - Math.pow(lado_opuesto, 2))
+                    return 0.5 * Math.sqrt(
+                        2 * Math.pow(lado1, 2)
+                        + 2 * Math.pow(lado2, 2)
+                        - Math.pow(lado_opuesto, 2)
+                    )
                 return 0.0
             except Exception:
                 return 0.0
@@ -542,20 +676,20 @@ def main_triangulo(page: ft.Page) -> ft.View:
         ma = calcular_mediana(ctx["b"], ctx["c"], ctx["a"])
         mb = calcular_mediana(ctx["a"], ctx["c"], ctx["b"])
         mc = calcular_mediana(ctx["a"], ctx["b"], ctx["c"])
-        
-        Mediana_ma.value = f'{round(ma, 2)}' if ma > 0 else ''
-        Mediana_mb.value = f'{round(mb, 2)}' if mb > 0 else ''
-        Mediana_mc.value = f'{round(mc, 2)}' if mc > 0 else ''
+
+        Mediana_ma.value = f"{round(ma, 2)}" if ma > 0 else ""
+        Mediana_mb.value = f"{round(mb, 2)}" if mb > 0 else ""
+        Mediana_mc.value = f"{round(mc, 2)}" if mc > 0 else ""
 
         # Calcular perímetro
         try:
             if ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] > 0:
                 per = ctx["a"] + ctx["b"] + ctx["c"]
-                perimetro.value = f'{round(per, 2)}'
+                perimetro.value = f"{round(per, 2)}"
             else:
-                perimetro.value = ''
+                perimetro.value = ""
         except Exception:
-            perimetro.value = ''
+            perimetro.value = ""
 
         # Actualizar los campos calculados
         if ctx["A"] > 0:
@@ -573,7 +707,9 @@ def main_triangulo(page: ft.Page) -> ft.View:
 
         # Dibujar el triángulo si todos los valores están disponibles
         if ctx["a"] > 0 and ctx["b"] > 0 and ctx["c"] > 0 and ctx["A"] > 0:
-            dibujar_triangulo(ctx["a"], ctx["b"], ctx["c"], ctx["A"], ctx["B"], ctx["C"])
+            dibujar_triangulo(
+                ctx["a"], ctx["b"], ctx["c"], ctx["A"], ctx["B"], ctx["C"]
+            )
 
         page.update()
 
@@ -582,26 +718,26 @@ def main_triangulo(page: ft.Page) -> ft.View:
         content=ft.Column(
             controls=[
                 ft.Row(
-                    controls=[lado_a, angulo_a], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[lado_a, angulo_a],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
-                    controls=[lado_b, angulo_b], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[lado_b, angulo_b],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
-                    controls=[lado_c, angulo_c], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[lado_c, angulo_c],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
                     controls=[
                         ft.ElevatedButton("Calcular", on_click=calcular_click),
                         ft.ElevatedButton("Limpiar", on_click=Limpiar_triangulo),
-                    ], 
-                    alignment=ft.MainAxisAlignment.CENTER
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
                 ),
             ]
         )
@@ -612,24 +748,24 @@ def main_triangulo(page: ft.Page) -> ft.View:
         content=ft.Column(
             controls=[
                 ft.Row(
-                    controls=[area, perimetro, semiperimetro], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[area, perimetro, semiperimetro],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
-                    controls=[altura_ha, altura_hb, altura_hc], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[altura_ha, altura_hb, altura_hc],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
-                    controls=[Mediana_ma, Mediana_mb, Mediana_mc], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[Mediana_ma, Mediana_mb, Mediana_mc],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
                 ft.Row(
-                    controls=[inradio, circunradio], 
-                    alignment=ft.MainAxisAlignment.CENTER, 
-                    vertical_alignment=ft.CrossAxisAlignment.START
+                    controls=[inradio, circunradio],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 ),
             ]
         )
@@ -665,19 +801,15 @@ def main_triangulo(page: ft.Page) -> ft.View:
     )
 
     # Contenedor de contenido
-    content = ft.Row(
-        controls=[column],
-        scroll=ft.ScrollMode.ALWAYS,
-        width=page.width
-    )
+    content = ft.Row(controls=[column], scroll=ft.ScrollMode.ALWAYS, width=page.width)
 
     # Stack con fondo y contenido
     stack = ft.Stack(
         [
             controls.containers(page),
             content,
-        ], 
-        expand=True
+        ],
+        expand=True,
     )
 
     # Manejador de redimensionamiento
@@ -694,13 +826,16 @@ def main_triangulo(page: ft.Page) -> ft.View:
         [stack],
         padding=0,
     )
-    
+
+
 # En lugar de:
 # ft.app(main_triangulo)
+
 
 # Usa:
 def main(page: ft.Page):
     view = main_triangulo(page)
     page.add(*view.controls)
+
 
 ft.app(main)
